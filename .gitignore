@@ -1,0 +1,32 @@
+# Python
+*.pyc
+__pycache__/
+
+# Django
+*.sqlite3
+*.pyc
+*.pyo
+*.pyd
+*.pyz
+*.pyzw
+*.log
+
+# Virtual enviroment
+ven/
+venv/
+evn/
+email/
+.env
+# Other project-specific files or directories
+/static/
+/media/
+
+
+.vscode/
+.idea/
+*.sublime*
+*.swp
+*~
+
+.DS_Store
+Thumbs.db

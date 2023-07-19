@@ -1,0 +1,632 @@
+{
+	"info": {
+		"_postman_id": "7a4c2931-6013-4f9c-b895-0c2cf4710664",
+		"name": "E-commerce",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27969571"
+	},
+	"item": [
+		{
+			"name": "staff endpoints",
+			"item": [
+				{
+					"name": "adding product",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5NTAwNDQzLCJpYXQiOjE2ODk0OTY4NDMsImp0aSI6ImY4ODc1YmIzNWM4NTQ2ZDNiNTM2NTU3ZTZmMjkxM2RkIiwidXNlcl9pZCI6MX0.WeOVBQRGOvLfIUAxsikGyoIdFNOlOKvtglfO7f6hfRY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "Category",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "20000",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "10",
+									"type": "text"
+								},
+								{
+									"key": "on_discount",
+									"value": "True",
+									"type": "text"
+								},
+								{
+									"key": "discount_price",
+									"value": "15000",
+									"type": "text"
+								},
+								{
+									"key": "item_name",
+									"value": "xbox",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "good condition",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/product_item/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"product_item",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sign up",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\" : \"admin\",\r\n    \"last_name\" : \"user\",\r\n    \"username\" : \"admin1\",\r\n    \"password\" : \"3242154\",\r\n    \"email\" : \"admin@admin.com\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/staff-signup/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"staff-signup",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "staff login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\" : \"admin\",\r\n    \"last_name\" : \"user\",\r\n    \"username\" : \"admin1\",\r\n    \"password\" : \"3242154\",\r\n    \"email\" : \"admin@admin.com\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/auth/login/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "adding category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5NDg5OTMxLCJpYXQiOjE2ODk0ODYzMzEsImp0aSI6IjNhODU2OTliZjE5ZTRkZWY5ZDM5NjQ5ZDI1MjM4MzRkIiwidXNlcl9pZCI6MX0.TkaEIok0uMhcMo_M2GvH62I9FhtUX_EV6hnqvtT8HrE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "electronics",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/category_product/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"category_product",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "see the customers orders",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5NDkxNDAwLCJpYXQiOjE2ODk0ODc4MDAsImp0aSI6IjViNjgxYzNiYTRlNDQ1NmQ4MDAyNDU2ODRlY2NjOGQ2IiwidXNlcl9pZCI6MX0.fzPOpZBrPa0TUwJY45a7_fpgtjJSPjz7f8LQT_SF-ds",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "card_number",
+									"value": "123456789",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "items",
+									"value": "6",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "user",
+									"value": "2",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "order_status",
+									"value": "accepted",
+									"type": "text"
+								},
+								{
+									"key": "total_ammount",
+									"value": "100000",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/orders/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"orders",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "transactions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5NTAwNDQzLCJpYXQiOjE2ODk0OTY4NDMsImp0aSI6ImY4ODc1YmIzNWM4NTQ2ZDNiNTM2NTU3ZTZmMjkxM2RkIiwidXNlcl9pZCI6MX0.WeOVBQRGOvLfIUAxsikGyoIdFNOlOKvtglfO7f6hfRY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "amount",
+									"value": "10000",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "transaction_type",
+									"value": "payment",
+									"type": "text"
+								},
+								{
+									"key": "payment_method",
+									"value": "credit_card",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/transactions/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"transactions",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refund",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"item\" : 3,\r\n    \"quantity\": 1\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user-orders/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user-orders",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "customer endpoints",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"token = pm.response.json()['access']\r",
+									"pm.globals.set('token', token)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\" : \"karaa\",\r\n    \"last_name\" : \"kamaran\",\r\n    \"username\" : \"karaa\",\r\n    \"password\" : \"3242154\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/auth/login/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add to cart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"item\" : 3,\r\n    \"quantity\": 2\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user-orders/add_to_cart/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user-orders",
+								"add_to_cart",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add cards",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "customer",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "cvv",
+									"value": "552",
+									"type": "text"
+								},
+								{
+									"key": "expire_date",
+									"value": "2025-05-05",
+									"type": "text"
+								},
+								{
+									"key": "card_number",
+									"value": "12123213213",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/cards/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"cards",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "see the cart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"item\" : 3,\r\n    \"quantity\": 1\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user-orders/add_to_cart/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user-orders",
+								"add_to_cart",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "checkout",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"item\" : 3,\r\n    \"quantity\": 1\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user-orders/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user-orders",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
