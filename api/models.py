@@ -8,7 +8,7 @@ class CustomUser(AbstractUser):
 
 
 class Card(models.Model):
-    customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True) #making the customer field not required   
     card_number = models.CharField(max_length=16)
     cvv = models.CharField(max_length=3)
     expire_date = models.DateField()
@@ -61,7 +61,6 @@ class Orders(models.Model):
     PENDING = 'pending'
     ORDER_STATUS_CHOICES = (
         (PENDING, 'Pending'),
-        ('accepted', 'Accepted'),
         ('rejected', 'Rejected'),
         ('ordered', 'ordered'),
     )

@@ -90,7 +90,7 @@ class CustomerOrdersSerializer(serializers.ModelSerializer):
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        fields = '__all__'
+        exclude = ['customer']
 
     def get_fields(self):
         fields = super().get_fields()
@@ -100,8 +100,7 @@ class CardSerializer(serializers.ModelSerializer):
             fields = {'id': fields['id']}
 
         return fields
-
-
+ 
         
 class TransactionSerializer(serializers.ModelSerializer):
     order = StaffOrdersSerializer()
@@ -173,36 +172,37 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class CheckoutSerializer(serializers.Serializer):
-    order_id = serializers.IntegerField()
     payment_method = serializers.ChoiceField(choices=Orders.PAYMENT_METHOD_CHOICES)
     card_id = serializers.IntegerField(required=False)
 
     def validate(self, data):
-        order_id = data['order_id']
+        request = self.context.get('request')  
+        if not request:
+            raise serializers.ValidationError({'detail': 'Missing request context'})
+
         payment_method = data['payment_method']
         card_id = data.get('card_id')
 
         try:
-            order = Orders.objects.get(id=order_id)
+
+            order = Orders.get_customer_cart(request.user)
         except Orders.DoesNotExist:
-            raise serializers.ValidationError("Invalid order ID")
+            raise serializers.ValidationError({'detail': 'Invalid cart'})
 
         if order.order_status != Orders.PENDING:
-            raise serializers.ValidationError("Order has already been processed")
+            raise serializers.ValidationError({'detail': 'Order has already been processed'})
 
         if payment_method == 'credit_card' and not card_id:
-            raise serializers.ValidationError("Card ID is required for credit card payment")
+            raise serializers.ValidationError({'detail': 'Card ID is required for credit card payment'})
 
         if payment_method == 'credit_card':
             try:
                 Card.objects.get(id=card_id, customer=order.user)
             except Card.DoesNotExist:
-                raise serializers.ValidationError("Invalid card ID")
+                raise serializers.ValidationError({'detail': 'Invalid card ID'})
 
         return super().validate(data)
-
-
-
+    
 
 
 class RefundSerializer(serializers.Serializer):

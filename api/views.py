@@ -12,7 +12,7 @@ from django.db import transaction
 from api.auth import CustomerAuthentication
 from .auth import StaffAuthentication
 from .serializers import *
-
+from django.shortcuts import get_object_or_404
 
 class Pagination(PageNumberPagination):
     page_size = 10
@@ -117,10 +117,21 @@ class TransactionViewSet(StaffBaseView):
     serializer_class = TransactionSerializer
 
 
+
+
 class CardViewSet(viewsets.ModelViewSet):
-    queryset = Card.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            return Card.objects.filter(customer=user)
+        else:
+            return Card.objects.none()
+    
     serializer_class = CardSerializer
     permission_classes = [IsAuthenticated]
+
+
 
 
 class CartItemViewSet(viewsets.ModelViewSet):
@@ -133,22 +144,20 @@ class CartItemViewSet(viewsets.ModelViewSet):
 
 
 
-
 class CheckoutViewSet(viewsets.ViewSet):
     authentication_classes = (CustomerAuthentication,)
 
     def create(self, request):
-        serializer = CheckoutSerializer(data=request.data)
+        serializer = CheckoutSerializer(data=request.data, context={'request': request})  # Pass the request context
         serializer.is_valid(raise_exception=True)
 
-        order_id = serializer.validated_data['order_id']
         payment_method = serializer.validated_data['payment_method']
         card_id = serializer.validated_data.get('card_id')
 
         try:
-            order = Orders.objects.get(id=order_id, user=request.user, order_status=Orders.PENDING)
+            order = Orders.get_customer_cart(request.user)
         except Orders.DoesNotExist:
-            return Response({'detail': 'Invalid order ID'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Invalid cart'}, status=status.HTTP_400_BAD_REQUEST)
 
         for order_item in order.order_items.all():
             if order_item.quantity > order_item.item.stock:
@@ -191,7 +200,6 @@ class CheckoutViewSet(viewsets.ViewSet):
 
 
  
-
 class RefundViewSet(viewsets.ViewSet):
     authentication_classes = (StaffAuthentication,)
 
@@ -213,10 +221,12 @@ class RefundViewSet(viewsets.ViewSet):
                 item = order_item.item
                 quantity = order_item.quantity
 
-                item.stock += quantity  # Increment the stock by the refunded quantity
+                item.stock += quantity  
                 item.save()
 
-            order_items.delete()  # Delete the order items
+            
+            order.order_status = 'rejected'
+            order.save()
 
             Transaction.objects.create(
                 customer=order.user,
@@ -225,8 +235,6 @@ class RefundViewSet(viewsets.ViewSet):
                 payment_method='refund',
                 transaction_type='refund'
             )
-
-            order.delete()  # Delete the order
 
         send_mail(
             subject='Refund Processed',
