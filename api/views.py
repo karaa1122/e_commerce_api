@@ -231,17 +231,19 @@ class RefundViewSet(viewsets.ViewSet):
         except Orders.DoesNotExist:
             return Response({'detail': 'Invalid order ID'}, status=status.HTTP_400_BAD_REQUEST)
 
-        order_items = order.order_items.all()
+        if not OrderItem.objects.filter(order=order).exists():
+            return Response({'detail': 'No items found for the order'}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
-            for order_item in order_items:
+            for order_item in order.order_items.all():
                 item = order_item.item
                 quantity = order_item.quantity
 
-                item.stock += quantity  
+                item.stock += quantity
                 item.save()
 
-            
+            original_payment_method = order.payment_method
+
             order.order_status = 'rejected'
             order.save()
 
@@ -249,7 +251,7 @@ class RefundViewSet(viewsets.ViewSet):
                 customer=order.user,
                 order=order,
                 amount=0,
-                payment_method='refund',
+                payment_method=original_payment_method, 
                 transaction_type='refund'
             )
 
