@@ -65,28 +65,28 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = 'email/email_directory'
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('POSTGRES_DB'),
-#         'USER': os.getenv('POSTGRES_USER'),
-#         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-#         'HOST': 'ecommerce_db',
-#         'PORT': '5432',  
-#     }
-# }
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'abc',
-        'USER': 'postgres',
-        'PASSWORD': 12,
-        'HOST': '127.0.0.1',
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': 'ecommerce_db',
         'PORT': '5432',  
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'abc',
+#         'USER': 'postgres',
+#         'PASSWORD': 12,
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',  
+#     }
+# }
 
 
 
