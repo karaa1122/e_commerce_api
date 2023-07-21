@@ -70,57 +70,85 @@ class StaffOrdersSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'created_at', 'total_amount', 'order_status', 'payment_method', 'items']
 
 
+
 class CustomerOrdersSerializer(serializers.ModelSerializer):
-    items = ItemSerializer(many=True, read_only=True)
-    discount = serializers.SerializerMethodField(read_only=True)
+    items = serializers.SerializerMethodField(read_only=True)
+    total_amount = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Orders
-        fields = ['id', 'user', 'items', 'created_at', 'total_amount', 'order_status', 'discount', 'payment_method']
+        fields = ['id', 'user', 'items', 'created_at', 'total_amount', 'order_status', 'payment_method']
 
-    def get_discount(self, obj):
-        items = obj.items.all()
-        total_discount = 0
-        for item in items:
+    def get_items(self, obj):
+        items_data = []
+        order_items = obj.order_items.all()
+        for order_item in order_items:
+            item_data = ItemSerializer(order_item.item).data
+            item_data['quantity'] = order_item.quantity
+            items_data.append(item_data)
+        return items_data
+
+    def get_total_amount(self, obj):
+        total_amount = 0
+        for order_item in obj.order_items.all():
+            item = order_item.item
             if item.on_discount:
-                total_discount += item.discount_price * item.orderitem_set.get(order=obj).quantity
-        return total_discount
+                total_amount += (item.price - item.discount_price) * order_item.quantity
+            else:
+                total_amount += item.price * order_item.quantity
+        return total_amount
+
 
 
 class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
-        exclude = ['customer']
+        fields = '__all__'
 
     def get_fields(self):
         fields = super().get_fields()
+        request = self.context.get('request')
 
-        user = self.context['request'].user
-        if user.is_staff:
-            fields = {'id': fields['id']}
+        if not request or not request.user.is_authenticated:
+            fields.pop('customer', None)
 
         return fields
  
-        
+
 class TransactionSerializer(serializers.ModelSerializer):
-    order = StaffOrdersSerializer()
-    final_price = serializers.SerializerMethodField()
+    order = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
-        fields = ['id', 'payment_method', 'transaction_type', 'order_id', 'order', 'final_price']
+        fields = ['id', 'payment_method', 'transaction_type', 'order_id', 'order']
 
-    def get_final_price(self, obj):
-        order = obj.order
-        items = order.items.all()
-        final_price = sum(self.calculate_item_price(item) for item in items)
-        return final_price
+    def get_order(self, obj):
+        order_data = StaffOrdersSerializer(obj.order).data
+        order_items_data = []
+        final_price = 0
+        for order_item in obj.order.order_items.all():
+            item_data = ItemSerializer(order_item.item).data
+            item_data['quantity'] = order_item.quantity
+            order_items_data.append(item_data)
+            item_price = order_item.item.price
+            if order_item.item.on_discount:
+                item_price = order_item.item.discount_price
+            final_price += item_price * order_item.quantity
+        order_data['items'] = order_items_data
+        order_data['total_amount'] = self.get_total_amount(obj.order)  # Use the get_total_amount method
+        return order_data
 
-    def calculate_item_price(self, item):
-        if item.on_discount:
-            return item.discount_price
-        return item.price
-
+    def get_total_amount(self, order):
+        total_amount = 0
+        for order_item in order.order_items.all():
+            item = order_item.item
+            if item.on_discount:
+                total_amount += (item.price - item.discount_price) * order_item.quantity
+            else:
+                total_amount += item.price * order_item.quantity
+        return total_amount
+    
+    
 
 class AddToCartSerializer(serializers.ModelSerializer):
     item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())

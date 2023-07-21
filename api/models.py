@@ -109,6 +109,7 @@ class Transaction(models.Model):
     customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     order = models.ForeignKey(Orders, on_delete=models.CASCADE)
     amount = models.FloatField()
+    
     payment_method = models.CharField(max_length=15, choices=PAYMENT_METHOD_CHOICES, default='cash')
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
     card = models.ForeignKey(Card, on_delete=models.CASCADE, null=True, blank=True)

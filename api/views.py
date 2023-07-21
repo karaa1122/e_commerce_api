@@ -12,6 +12,7 @@ from django.db import transaction
 from api.auth import CustomerAuthentication
 from .auth import StaffAuthentication
 from .serializers import *
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
 class Pagination(PageNumberPagination):
@@ -118,21 +119,24 @@ class TransactionViewSet(StaffBaseView):
 
 
 
-
-class CardViewSet(viewsets.ModelViewSet):
-
-    def get_queryset(self):
-        user = self.request.user
-        if user.is_authenticated:
-            return Card.objects.filter(customer=user)
-        else:
-            return Card.objects.none()
-    
+class CardViewSet(ModelViewSet):
     serializer_class = CardSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        user = self.request.user
 
+        # Check if the user is authenticated
+        if user.is_authenticated:
+            # Return cards that belong to the authenticated user
+            return Card.objects.filter(customer=user)
+        else:
+            # If the user is not authenticated, return an empty queryset
+            return Card.objects.none()
 
+    def perform_create(self, serializer):
+        # Automatically set the customer field to the authenticated user when creating a card
+        serializer.save(customer=self.request.user)
 
 class CartItemViewSet(viewsets.ModelViewSet):
 
