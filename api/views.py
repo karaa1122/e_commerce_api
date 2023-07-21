@@ -10,10 +10,13 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 from api.auth import CustomerAuthentication
-from .auth import StaffAuthentication
+from .auth import StaffAuthentication, CanCheckout
 from .serializers import *
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
+
+
 
 class Pagination(PageNumberPagination):
     page_size = 10
@@ -126,17 +129,19 @@ class CardViewSet(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        # Check if the user is authenticated
         if user.is_authenticated:
-            # Return cards that belong to the authenticated user
+
             return Card.objects.filter(customer=user)
         else:
-            # If the user is not authenticated, return an empty queryset
+
             return Card.objects.none()
 
     def perform_create(self, serializer):
-        # Automatically set the customer field to the authenticated user when creating a card
+        
         serializer.save(customer=self.request.user)
+
+
+
 
 class CartItemViewSet(viewsets.ModelViewSet):
 
@@ -147,12 +152,11 @@ class CartItemViewSet(viewsets.ModelViewSet):
     serializer_class = CartItemSerializer
 
 
-
 class CheckoutViewSet(viewsets.ViewSet):
     authentication_classes = (CustomerAuthentication,)
 
     def create(self, request):
-        serializer = CheckoutSerializer(data=request.data, context={'request': request})  # Pass the request context
+        serializer = CheckoutSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
         payment_method = serializer.validated_data['payment_method']
@@ -163,9 +167,24 @@ class CheckoutViewSet(viewsets.ViewSet):
         except Orders.DoesNotExist:
             return Response({'detail': 'Invalid cart'}, status=status.HTTP_400_BAD_REQUEST)
 
+   
+        if not order.order_items.exists():
+            return Response({'detail': 'Order has already been processed'}, status=status.HTTP_400_BAD_REQUEST)
+
         for order_item in order.order_items.all():
             if order_item.quantity > order_item.item.stock:
                 return Response({'detail': 'Insufficient stock quantity'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if payment_method == 'credit_card' and not card_id:
+            return Response({'detail': 'Card ID is required for credit card payment'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+        if payment_method == 'credit_card':
+            try:
+                card = Card.objects.get(id=card_id, customer=request.user)
+            except Card.DoesNotExist:
+                return Response({'detail': 'Invalid card ID'}, status=status.HTTP_400_BAD_REQUEST)
 
         for order_item in order.order_items.all():
             order_item.item.stock -= order_item.quantity
@@ -184,11 +203,7 @@ class CheckoutViewSet(viewsets.ViewSet):
         }
 
         if payment_method == 'credit_card':
-            try:
-                card = Card.objects.get(id=card_id, customer=request.user)
-                transaction_data['card'] = card
-            except Card.DoesNotExist:
-                return Response({'detail': 'Invalid card ID'}, status=status.HTTP_400_BAD_REQUEST)
+            transaction_data['card'] = card
 
         Transaction.objects.create(**transaction_data)
 
