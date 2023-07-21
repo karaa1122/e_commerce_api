@@ -1,6 +1,7 @@
 from rest_framework import serializers
-
 from .models import *
+
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -135,7 +136,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                 item_price = order_item.item.discount_price
             final_price += item_price * order_item.quantity
         order_data['items'] = order_items_data
-        order_data['total_amount'] = self.get_total_amount(obj.order)  # Use the get_total_amount method
+        order_data['total_amount'] = self.get_total_amount(obj.order)  
         return order_data
 
     def get_total_amount(self, order):

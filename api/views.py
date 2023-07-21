@@ -10,11 +10,9 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 from api.auth import CustomerAuthentication
-from .auth import StaffAuthentication, CanCheckout
+from .auth import StaffAuthentication
 from .serializers import *
-from rest_framework.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
+
 
 
 

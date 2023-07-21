@@ -20,14 +20,3 @@ class StaffAuthentication(JWTAuthentication):
 class CustomerAuthentication(StaffAuthentication):
     CHECK_IS_STAFF = False
 
-
-class CanCheckout(BasePermission):
-    message = 'Cannot checkout. An order has already been processed.'
-
-    def has_permission(self, request, view):
-        user = request.user
-        try:
-            order = Orders.get_customer_cart(user)
-            return order.order_status == Orders.PENDING
-        except Orders.DoesNotExist:
-            return False
