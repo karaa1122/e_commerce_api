@@ -63,6 +63,8 @@ class CustomerRegisterSerializer(serializers.Serializer):
         return user
 
 
+
+
 class StaffOrdersSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
@@ -70,6 +72,39 @@ class StaffOrdersSerializer(serializers.ModelSerializer):
         model = Orders
         fields = ['id', 'user', 'created_at', 'total_amount', 'order_status', 'payment_method', 'items']
 
+    def get_total_amount(self, obj):
+        total_amount = 0
+        for order_item in obj.order_items.all():
+            item = order_item.item
+            if item.on_discount:
+                total_amount += (item.price - item.discount_price) * order_item.quantity
+            else:
+                total_amount += item.price * order_item.quantity
+        return total_amount
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['total_amount'] = self.get_total_amount(instance)
+
+
+        items_data = []
+        for order_item in instance.order_items.all():
+            item_data = {
+                'id': order_item.item.id,
+                'item_name': order_item.item.item_name,
+                'price': order_item.item.price,
+                'on_discount': order_item.item.on_discount,
+                'discount_price': order_item.item.discount_price,
+                'stock': order_item.item.stock,
+                'description': order_item.item.description,
+                'Category': order_item.item.Category.id,
+                'quantity': order_item.quantity,
+            }
+            items_data.append(item_data)
+
+        representation['items'] = items_data
+        return representation
+    
 
 
 class CustomerOrdersSerializer(serializers.ModelSerializer):

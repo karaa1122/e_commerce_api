@@ -250,7 +250,6 @@ class RefundViewSet(viewsets.ViewSet):
             Transaction.objects.create(
                 customer=order.user,
                 order=order,
-                amount=0,
                 payment_method=original_payment_method, 
                 transaction_type='refund'
             )
