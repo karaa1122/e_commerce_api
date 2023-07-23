@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import *
-
-
+from django.core.mail import send_mail
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -235,12 +236,13 @@ class CartSerializer(serializers.ModelSerializer):
         return obj.total_amount
 
 
+
 class CheckoutSerializer(serializers.Serializer):
     payment_method = serializers.ChoiceField(choices=Orders.PAYMENT_METHOD_CHOICES)
     card_id = serializers.IntegerField(required=False)
 
     def validate(self, data):
-        request = self.context.get('request')  
+        request = self.context.get('request')
         if not request:
             raise serializers.ValidationError({'detail': 'Missing request context'})
 
@@ -248,7 +250,6 @@ class CheckoutSerializer(serializers.Serializer):
         card_id = data.get('card_id')
 
         try:
-
             order = Orders.get_customer_cart(request.user)
         except Orders.DoesNotExist:
             raise serializers.ValidationError({'detail': 'Invalid cart'})
@@ -265,8 +266,64 @@ class CheckoutSerializer(serializers.Serializer):
             except Card.DoesNotExist:
                 raise serializers.ValidationError({'detail': 'Invalid card ID'})
 
-        return super().validate(data)
-    
+        return data
+
+    def create_checkout(self, request):
+        serializer = self
+        payment_method = serializer.validated_data['payment_method']
+        card_id = serializer.validated_data.get('card_id')
+
+        try:
+            order = Orders.get_customer_cart(request.user)
+        except Orders.DoesNotExist:
+            return Response({'detail': 'Invalid cart'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not order.order_items.exists():
+            return Response({'detail': 'Order has already been processed'}, status=status.HTTP_400_BAD_REQUEST)
+
+        for order_item in order.order_items.all():
+            if order_item.quantity > order_item.item.stock:
+                return Response({'detail': 'Insufficient stock quantity'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if payment_method == 'credit_card' and not card_id:
+            return Response({'detail': 'Card ID is required for credit card payment'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if payment_method == 'credit_card':
+            try:
+                card = Card.objects.get(id=card_id, customer=request.user)
+            except Card.DoesNotExist:
+                return Response({'detail': 'Invalid card ID'}, status=status.HTTP_400_BAD_REQUEST)
+
+        for order_item in order.order_items.all():
+            order_item.item.stock -= order_item.quantity
+            order_item.item.save()
+
+        order.order_status = 'ordered'
+        order.payment_method = payment_method
+        order.save()
+
+        transaction_data = {
+            'customer': request.user,
+            'order': order,
+            'amount': order.total_amount,
+            'payment_method': payment_method,
+            'transaction_type': 'payment',
+        }
+
+        if payment_method == 'credit_card':
+            transaction_data['card'] = card
+
+        Transaction.objects.create(**transaction_data)
+
+        send_mail(
+            subject='Order Confirmation',
+            message='Your order has been confirmed and processed successfully.',
+            from_email='admin@admin.com',
+            recipient_list=[request.user.email],
+            fail_silently=True,
+        )
+
+        return Response({'detail': 'Checkout successful'}, status=status.HTTP_200_OK)
 
 
 class RefundSerializer(serializers.Serializer):

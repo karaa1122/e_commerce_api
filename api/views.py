@@ -157,66 +157,13 @@ class CheckoutViewSet(viewsets.ViewSet):
         serializer = CheckoutSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
-        payment_method = serializer.validated_data['payment_method']
-        card_id = serializer.validated_data.get('card_id')
-
-        try:
-            order = Orders.get_customer_cart(request.user)
-        except Orders.DoesNotExist:
-            return Response({'detail': 'Invalid cart'}, status=status.HTTP_400_BAD_REQUEST)
-
-   
-        if not order.order_items.exists():
-            return Response({'detail': 'Order has already been processed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        for order_item in order.order_items.all():
-            if order_item.quantity > order_item.item.stock:
-                return Response({'detail': 'Insufficient stock quantity'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if payment_method == 'credit_card' and not card_id:
-            return Response({'detail': 'Card ID is required for credit card payment'}, status=status.HTTP_400_BAD_REQUEST)
+        return serializer.create_checkout(request)
 
 
 
-        if payment_method == 'credit_card':
-            try:
-                card = Card.objects.get(id=card_id, customer=request.user)
-            except Card.DoesNotExist:
-                return Response({'detail': 'Invalid card ID'}, status=status.HTTP_400_BAD_REQUEST)
-
-        for order_item in order.order_items.all():
-            order_item.item.stock -= order_item.quantity
-            order_item.item.save()
-
-        order.order_status = 'ordered'
-        order.payment_method = payment_method
-        order.save()
-
-        transaction_data = {
-            'customer': request.user,
-            'order': order,
-            'amount': order.total_amount,
-            'payment_method': payment_method,
-            'transaction_type': 'payment',
-        }
-
-        if payment_method == 'credit_card':
-            transaction_data['card'] = card
-
-        Transaction.objects.create(**transaction_data)
-
-        send_mail(
-            subject='Order Confirmation',
-            message='Your order has been confirmed and processed successfully.',
-            from_email='admin@admin.com',
-            recipient_list=[request.user.email],
-            fail_silently=True,
-        )
-
-        return Response({'detail': 'Checkout successful'}, status=status.HTTP_200_OK)
 
 
- 
+
 class RefundViewSet(viewsets.ViewSet):
     authentication_classes = (StaffAuthentication,)
 
@@ -234,6 +181,10 @@ class RefundViewSet(viewsets.ViewSet):
         if not OrderItem.objects.filter(order=order).exists():
             return Response({'detail': 'No items found for the order'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+        if order.order_status == 'rejected':
+            return Response({'detail': 'Refund already processed for this order'}, status=status.HTTP_400_BAD_REQUEST)
+
         with transaction.atomic():
             for order_item in order.order_items.all():
                 item = order_item.item
@@ -250,6 +201,7 @@ class RefundViewSet(viewsets.ViewSet):
             Transaction.objects.create(
                 customer=order.user,
                 order=order,
+                amount=0,
                 payment_method=original_payment_method, 
                 transaction_type='refund'
             )
