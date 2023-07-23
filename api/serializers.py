@@ -237,36 +237,11 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 
+
+
 class CheckoutSerializer(serializers.Serializer):
     payment_method = serializers.ChoiceField(choices=Orders.PAYMENT_METHOD_CHOICES)
     card_id = serializers.IntegerField(required=False)
-
-    def validate(self, data):
-        request = self.context.get('request')
-        if not request:
-            raise serializers.ValidationError({'detail': 'Missing request context'})
-
-        payment_method = data['payment_method']
-        card_id = data.get('card_id')
-
-        try:
-            order = Orders.get_customer_cart(request.user)
-        except Orders.DoesNotExist:
-            raise serializers.ValidationError({'detail': 'Invalid cart'})
-
-        if order.order_status != Orders.PENDING:
-            raise serializers.ValidationError({'detail': 'Order has already been processed'})
-
-        if payment_method == 'credit_card' and not card_id:
-            raise serializers.ValidationError({'detail': 'Card ID is required for credit card payment'})
-
-        if payment_method == 'credit_card':
-            try:
-                Card.objects.get(id=card_id, customer=order.user)
-            except Card.DoesNotExist:
-                raise serializers.ValidationError({'detail': 'Invalid card ID'})
-
-        return data
 
     def create_checkout(self, request):
         serializer = self
@@ -294,13 +269,16 @@ class CheckoutSerializer(serializers.Serializer):
             except Card.DoesNotExist:
                 return Response({'detail': 'Invalid card ID'}, status=status.HTTP_400_BAD_REQUEST)
 
+        
         for order_item in order.order_items.all():
             order_item.item.stock -= order_item.quantity
             order_item.item.save()
 
+        
         order.order_status = 'ordered'
         order.payment_method = payment_method
         order.save()
+
 
         transaction_data = {
             'customer': request.user,
@@ -315,6 +293,7 @@ class CheckoutSerializer(serializers.Serializer):
 
         Transaction.objects.create(**transaction_data)
 
+        
         send_mail(
             subject='Order Confirmation',
             message='Your order has been confirmed and processed successfully.',
