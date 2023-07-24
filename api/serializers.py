@@ -18,7 +18,9 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = "__all__"
 
+
 class orderItemSerializer(serializers.ModelSerializer):
+    item = ItemSerializer()          
     class Meta:
         model = OrderItem
         fields = "__all__"
@@ -75,7 +77,6 @@ class CustomerRegisterSerializer(serializers.Serializer):
 class StaffOrdersSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     total_amount = serializers.SerializerMethodField()
-    items = ItemSerializer(many=True, read_only=True)
     order_items = orderItemSerializer(many=True, read_only=True)
 
     class Meta:
