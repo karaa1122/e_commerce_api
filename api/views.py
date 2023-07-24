@@ -6,7 +6,6 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 from api.auth import CustomerAuthentication
@@ -150,15 +149,21 @@ class CartItemViewSet(viewsets.ModelViewSet):
     serializer_class = CartItemSerializer
 
 
+
 class CheckoutViewSet(viewsets.ViewSet):
     authentication_classes = (CustomerAuthentication,)
 
     def create(self, request):
-        serializer = CheckoutSerializer(data=request.data, context={'request': request})
+        try:
+            order = Orders.get_customer_cart(request.user)
+        except Orders.DoesNotExist:
+            return Response({'detail': 'Invalid cart'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = CheckoutSerializer(instance=order, data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        return serializer.create_checkout(request)
-
+        return Response({'detail': 'Checkout successful'}, status=status.HTTP_200_OK)
 
 
 

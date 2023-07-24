@@ -12,9 +12,6 @@ __pycache__/
 *.log
 
 # Virtual enviroment
-ven/
-venv/
-evn/
 env/
 email/
 .env

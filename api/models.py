@@ -13,7 +13,7 @@ class Card(models.Model):
     cvv = models.CharField(max_length=3)
     expire_date = models.DateField()
 
-    def __str__(self):
+    def __str__(self):  
         return self.card_number
 
 

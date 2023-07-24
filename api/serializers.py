@@ -18,6 +18,12 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = "__all__"
 
+class orderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = "__all__"
+
+
 
 class StaffRegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField()
@@ -68,10 +74,13 @@ class CustomerRegisterSerializer(serializers.Serializer):
 
 class StaffOrdersSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    total_amount = serializers.SerializerMethodField()
+    items = ItemSerializer(many=True, read_only=True)
+    order_items = orderItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Orders
-        fields = ['id', 'user', 'created_at', 'total_amount', 'order_status', 'payment_method', 'items']
+        fields = ['id', 'user', 'created_at', 'total_amount', 'order_status','order_items', 'payment_method', 'items']
 
     def get_total_amount(self, obj):
         total_amount = 0
@@ -83,30 +92,7 @@ class StaffOrdersSerializer(serializers.ModelSerializer):
                 total_amount += item.price * order_item.quantity
         return total_amount
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['total_amount'] = self.get_total_amount(instance)
-
-
-        items_data = []
-        for order_item in instance.order_items.all():
-            item_data = {
-                'id': order_item.item.id,
-                'item_name': order_item.item.item_name,
-                'price': order_item.item.price,
-                'on_discount': order_item.item.on_discount,
-                'discount_price': order_item.item.discount_price,
-                'stock': order_item.item.stock,
-                'description': order_item.item.description,
-                'Category': order_item.item.Category.id,
-                'quantity': order_item.quantity,
-            }
-            items_data.append(item_data)
-
-        representation['items'] = items_data
-        return representation
-    
-
+ 
 
 class CustomerOrdersSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField(read_only=True)
@@ -243,47 +229,38 @@ class CheckoutSerializer(serializers.Serializer):
     payment_method = serializers.ChoiceField(choices=Orders.PAYMENT_METHOD_CHOICES)
     card_id = serializers.IntegerField(required=False)
 
-    def create_checkout(self, request):
-        serializer = self
-        payment_method = serializer.validated_data['payment_method']
-        card_id = serializer.validated_data.get('card_id')
+    def update(self, instance, validated_data):
+        payment_method = validated_data.get('payment_method')
+        card_id = validated_data.get('card_id')
 
-        try:
-            order = Orders.get_customer_cart(request.user)
-        except Orders.DoesNotExist:
-            return Response({'detail': 'Invalid cart'}, status=status.HTTP_400_BAD_REQUEST)
+        if not instance.order_items.exists():
+            raise serializers.ValidationError({'detail': 'Order has already been processed'})
 
-        if not order.order_items.exists():
-            return Response({'detail': 'Order has already been processed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        for order_item in order.order_items.all():
+        for order_item in instance.order_items.all():
             if order_item.quantity > order_item.item.stock:
-                return Response({'detail': 'Insufficient stock quantity'}, status=status.HTTP_400_BAD_REQUEST)
+                raise serializers.ValidationError({'detail': 'Insufficient stock quantity'})
 
         if payment_method == 'credit_card' and not card_id:
-            return Response({'detail': 'Card ID is required for credit card payment'}, status=status.HTTP_400_BAD_REQUEST)
+            raise serializers.ValidationError({'detail': 'Card ID is required for credit card payment'})
 
         if payment_method == 'credit_card':
             try:
-                card = Card.objects.get(id=card_id, customer=request.user)
+                card = Card.objects.get(id=card_id, customer=instance.user)
             except Card.DoesNotExist:
-                return Response({'detail': 'Invalid card ID'}, status=status.HTTP_400_BAD_REQUEST)
+                raise serializers.ValidationError({'detail': 'Invalid card ID'})
 
-        
-        for order_item in order.order_items.all():
+        for order_item in instance.order_items.all():
             order_item.item.stock -= order_item.quantity
             order_item.item.save()
 
-        
-        order.order_status = 'ordered'
-        order.payment_method = payment_method
-        order.save()
-
+        instance.order_status = 'ordered'
+        instance.payment_method = payment_method
+        instance.save()
 
         transaction_data = {
-            'customer': request.user,
-            'order': order,
-            'amount': order.total_amount,
+            'customer': instance.user,
+            'order': instance,
+            'amount': instance.total_amount,
             'payment_method': payment_method,
             'transaction_type': 'payment',
         }
@@ -293,16 +270,15 @@ class CheckoutSerializer(serializers.Serializer):
 
         Transaction.objects.create(**transaction_data)
 
-        
         send_mail(
             subject='Order Confirmation',
             message='Your order has been confirmed and processed successfully.',
             from_email='admin@admin.com',
-            recipient_list=[request.user.email],
+            recipient_list=[instance.user.email],
             fail_silently=True,
         )
 
-        return Response({'detail': 'Checkout successful'}, status=status.HTTP_200_OK)
+        return instance
 
 
 class RefundSerializer(serializers.Serializer):
