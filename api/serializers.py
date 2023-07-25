@@ -20,7 +20,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class orderItemSerializer(serializers.ModelSerializer):
-    item = ItemSerializer()          
+    item = ItemSerializer(many=True, read_only=True)          
     class Meta:
         model = OrderItem
         fields = "__all__"
@@ -253,7 +253,7 @@ class CheckoutSerializer(serializers.Serializer):
         for order_item in instance.order_items.all():
             order_item.item.stock -= order_item.quantity
             order_item.item.save()
-
+    
         instance.order_status = 'ordered'
         instance.payment_method = payment_method
         instance.save()

@@ -49,6 +49,10 @@ class CustomerCategoryViewSet(CustomerBaseView):
     http_method_names = ['get']
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    ordering_fields = ['price']
+    pagination_class = Pagination
 
 
 class CustomerItemsViewSet(CustomerBaseView):
@@ -56,7 +60,7 @@ class CustomerItemsViewSet(CustomerBaseView):
     queryset = Item.objects.with_final_price()
     serializer_class = ItemSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['item_name', 'category__name']
+    search_fields = ['item_name']
     ordering_fields = ['price']
     pagination_class = Pagination
 
