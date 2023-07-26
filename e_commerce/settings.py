@@ -1,9 +1,9 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,6 +18,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -78,6 +79,8 @@ DATABASES = {
         'PORT': '5432',  
     }
 }
+
+
 
 
 

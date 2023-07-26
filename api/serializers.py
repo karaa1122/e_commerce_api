@@ -20,7 +20,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class orderItemSerializer(serializers.ModelSerializer):
-    item = ItemSerializer(many=True, read_only=True)          
+    item = ItemSerializer(read_only=True)          
     class Meta:
         model = OrderItem
         fields = "__all__"
